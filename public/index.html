@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Token Usage Cockpit</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="backdrop" aria-hidden="true"></div>
+    <main class="layout">
+      <header class="hero panel">
+        <p class="eyebrow">AI spend and throughput</p>
+        <h1>Token Usage Cockpit</h1>
+        <p class="tagline">
+          One view across providers. Pull usage by date range and compare where tokens and spend are going.
+        </p>
+        <form id="range-form" class="controls">
+          <label>
+            Start
+            <input id="start" name="start" type="date" required />
+          </label>
+          <label>
+            End
+            <input id="end" name="end" type="date" required />
+          </label>
+          <button id="refresh" type="submit">Refresh usage</button>
+        </form>
+      </header>
+
+      <section class="kpis" id="kpis">
+        <article class="kpi panel">
+          <h2>Total tokens</h2>
+          <p id="kpi-total-tokens">-</p>
+        </article>
+        <article class="kpi panel">
+          <h2>Estimated cost</h2>
+          <p id="kpi-cost">-</p>
+        </article>
+      </section>
+
+      <section class="kpis account-kpis" id="account-kpis">
+        <article class="kpi panel">
+          <h2>Tokens used today</h2>
+          <p id="kpi-tokens-today">-</p>
+        </article>
+        <article class="kpi panel">
+          <h2>Total queries today</h2>
+          <p id="kpi-queries-today">-</p>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>Provider breakdown</h2>
+          <p id="provider-status" class="hint"></p>
+        </div>
+        <div id="providers" class="providers"></div>
+      </section>
+
+      <section id="messages"></section>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

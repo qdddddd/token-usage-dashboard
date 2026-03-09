@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Browser/profile data
+.browser-data/
+
+# Legacy/local cache files
+.packy-cache.json
+.rightcode-cache.json
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test/build artifacts
+coverage/
+playwright-report/
+test-results/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
