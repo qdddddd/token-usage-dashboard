@@ -1,4 +1,4 @@
-const { mergeUsageTotals, normalizeDailyRecords, toNumber } = require("./utils");
+const { getShanghaiDateString, mergeUsageTotals, normalizeDailyRecords, toNumber } = require("./utils");
 const { withEdgePage } = require("./edge-browser");
 
 /**
@@ -88,11 +88,14 @@ async function scrapeRightCodeData(env, runtime) {
 async function fetchUsage({ start, end, env, runtime }) {
   try {
     const data = await scrapeRightCodeData(env, runtime);
-    const todayDaily = Array.isArray(data.daily) ? data.daily[0] || null : null;
+    const todayDate = getShanghaiDateString();
+    const todayDaily = Array.isArray(data.daily) && data.daily[0]
+      ? { ...data.daily[0], date: todayDate }
+      : null;
     
     // Filter by date range
     const daily = normalizeDailyRecords(
-      (data.daily || []).filter(item => {
+      (data.daily || []).map((item) => ({ ...item, date: todayDate })).filter(item => {
         return item.date >= start && item.date <= end;
       })
     );

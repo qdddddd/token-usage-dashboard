@@ -1,3 +1,35 @@
+const SHANGHAI_TIMEZONE = "Asia/Shanghai";
+
+function formatDateInTimezone(date, timeZone = SHANGHAI_TIMEZONE) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const parts = formatter.formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  if (!year || !month || !day) {
+    return null;
+  }
+
+  return `${year}-${month}-${day}`;
+}
+
+function getShanghaiDateString(date = new Date()) {
+  return formatDateInTimezone(date, SHANGHAI_TIMEZONE);
+}
+
+function parseShanghaiDateTime(dateStr, isEndOfDay) {
+  const suffix = isEndOfDay ? "T23:59:59.999+08:00" : "T00:00:00.000+08:00";
+  const value = Date.parse(`${dateStr}${suffix}`);
+  return Number.isFinite(value) ? value : NaN;
+}
+
 function toNumber(value) {
   const num = Number(value);
   return Number.isFinite(num) ? num : 0;
@@ -7,7 +39,7 @@ function isoDateFromUnix(seconds) {
   if (!Number.isFinite(seconds)) {
     return null;
   }
-  return new Date(seconds * 1000).toISOString().slice(0, 10);
+  return getShanghaiDateString(new Date(seconds * 1000));
 }
 
 function newUsageRecord(date) {
@@ -69,8 +101,11 @@ function normalizeDailyRecords(records) {
 }
 
 module.exports = {
+  formatDateInTimezone,
+  getShanghaiDateString,
   isoDateFromUnix,
   mergeUsageTotals,
   normalizeDailyRecords,
+  parseShanghaiDateTime,
   toNumber,
 };

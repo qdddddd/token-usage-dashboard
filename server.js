@@ -3,7 +3,7 @@ const http = require("node:http");
 const path = require("node:path");
 const { URL } = require("node:url");
 
-const { mergeUsageTotals, normalizeDailyRecords, toNumber } = require("./providers/utils");
+const { getShanghaiDateString, mergeUsageTotals, normalizeDailyRecords, toNumber } = require("./providers/utils");
 const { closeSharedEdgeContext } = require("./providers/edge-browser");
 
 const openaiProvider = require("./providers/openai");
@@ -88,6 +88,11 @@ function sendJson(response, statusCode, body) {
 function parseRange(requestUrl) {
   const start = requestUrl.searchParams.get("start");
   const end = requestUrl.searchParams.get("end");
+
+  if (!start && !end) {
+    const today = getShanghaiDateString();
+    return { start: today, end: today };
+  }
 
   if (!start || !end) {
     throw new Error("Both start and end query params are required (YYYY-MM-DD)");
@@ -236,7 +241,7 @@ async function fetchSingleProvider(range, providerId) {
   }
 
   const runtime = {};
-  const todayDate = new Date().toISOString().slice(0, 10);
+  const todayDate = getShanghaiDateString();
   const rangeContainsToday = range.start <= todayDate && todayDate <= range.end;
 
   try {
@@ -274,7 +279,7 @@ async function fetchUsageAcrossProviders(range, handlers = {}) {
 
   const runtime = {};
 
-  const todayDate = new Date().toISOString().slice(0, 10);
+  const todayDate = getShanghaiDateString();
   const rangeContainsToday = range.start <= todayDate && todayDate <= range.end;
 
   if (typeof handlers.onStart === "function") {

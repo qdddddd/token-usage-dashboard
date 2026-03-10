@@ -76,14 +76,25 @@ body {
 .controls {
   display: flex;
   flex-wrap: wrap;
-  align-items: end;
+  align-items: center;
   gap: 0.7rem;
 }
 
-.controls label {
-  display: grid;
-  gap: 0.2rem;
+.today-pill {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #bfd5cf;
+  border-radius: 999px;
+  background: #fffaf1;
   font: 500 0.8rem "IBM Plex Mono", monospace;
+}
+
+.today-pill span {
+  color: var(--accent);
+  font-weight: 600;
 }
 
 input,
@@ -118,11 +129,7 @@ button:disabled {
 .kpis {
   display: grid;
   gap: 0.8rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.account-kpis {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .kpi h2 {
@@ -199,32 +206,39 @@ button:disabled {
 }
 
 .provider-refresh {
+  appearance: none;
+  -webkit-appearance: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.45rem;
-  height: 1.45rem;
-  padding: 0;
-  border: 1px solid #9dbbb5;
-  border-radius: 999px;
-  background: #eef8f5;
+  padding: 0.1rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
   color: var(--accent);
   box-shadow: none;
-  font: 600 0.9rem "IBM Plex Mono", monospace;
+  font: inherit;
   line-height: 1;
 }
 
+.provider-refresh-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  display: block;
+}
+
+.provider-refresh[aria-busy="true"] .provider-refresh-icon {
+  animation: provider-spin 0.9s linear infinite;
+}
+
 .provider-refresh:hover {
-  background: #e2f3ee;
   color: #095a54;
   filter: none;
   transform: none;
 }
 
 .provider-refresh:disabled {
-  background: #f3f0e9;
   color: var(--ink-soft);
-  border-color: #d2cbc0;
 }
 
 .provider-meta {
@@ -298,16 +312,16 @@ button:disabled {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .account-kpis {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .provider-subcards {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media (max-width: 620px) {
+  .kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .layout {
     padding: 1rem 0.75rem 1.6rem;
   }
@@ -326,5 +340,14 @@ button:disabled {
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+@keyframes provider-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }

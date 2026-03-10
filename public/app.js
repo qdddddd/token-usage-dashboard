@@ -1,11 +1,8 @@
-const form = document.getElementById("range-form");
-const startInput = document.getElementById("start");
-const endInput = document.getElementById("end");
 const refreshButton = document.getElementById("refresh");
+const todayDateLabel = document.getElementById("today-date");
 
 const kpiTotalTokens = document.getElementById("kpi-total-tokens");
 const kpiCost = document.getElementById("kpi-cost");
-const kpiTokensToday = document.getElementById("kpi-tokens-today");
 const kpiQueriesToday = document.getElementById("kpi-queries-today");
 
 const providersContainer = document.getElementById("providers");
@@ -35,16 +32,27 @@ function toSafeNumber(value) {
   return Number.isFinite(numeric) ? numeric : 0;
 }
 
-function setDefaultRange() {
-  const today = new Date();
-  const end = today.toISOString().slice(0, 10);
+function getTodayDate() {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 
-  const startDate = new Date(today);
-  startDate.setDate(startDate.getDate() - 6);
-  const start = startDate.toISOString().slice(0, 10);
+  const parts = formatter.formatToParts(new Date());
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+  return `${year}-${month}-${day}`;
+}
 
-  startInput.value = start;
-  endInput.value = end;
+function updateTodayLabel(todayDate) {
+  if (!todayDateLabel) {
+    return;
+  }
+
+  todayDateLabel.textContent = todayDate || getTodayDate();
 }
 
 function setLoading(isLoading) {
@@ -85,9 +93,7 @@ function createProviderHeading(label, dashboardUrl) {
 function clearSummary() {
   kpiTotalTokens.textContent = "-";
   kpiCost.textContent = "-";
-  kpiTokensToday.textContent = "-";
   kpiQueriesToday.textContent = "-";
-  kpiTokensToday.title = "";
   kpiQueriesToday.title = "";
 }
 
@@ -148,38 +154,6 @@ function buildCombinedTotals(providers) {
   return totals;
 }
 
-function buildCombinedDaily(providers) {
-  const byDate = new Map();
-
-  for (const provider of providers || []) {
-    for (const entry of provider.daily || []) {
-      if (!entry || !entry.date) {
-        continue;
-      }
-
-      if (!byDate.has(entry.date)) {
-        byDate.set(entry.date, {
-          date: entry.date,
-          inputTokens: 0,
-          outputTokens: 0,
-          totalTokens: 0,
-          queryCount: 0,
-          costUsd: 0,
-        });
-      }
-
-      const bucket = byDate.get(entry.date);
-      bucket.inputTokens += toSafeNumber(entry.inputTokens);
-      bucket.outputTokens += toSafeNumber(entry.outputTokens);
-      bucket.totalTokens += toSafeNumber(entry.totalTokens);
-      bucket.queryCount += toSafeNumber(entry.queryCount);
-      bucket.costUsd += toSafeNumber(entry.costUsd);
-    }
-  }
-
-  return Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date));
-}
-
 function buildAccountSummary(providers, todayByProvider) {
   const summary = {
     balanceRemainingUsd: null,
@@ -232,7 +206,6 @@ function recalculateDashboardState(state) {
     ? nextState.todayByProvider
     : {};
   nextState.totals = buildCombinedTotals(nextState.providers);
-  nextState.daily = buildCombinedDaily(nextState.providers);
   nextState.accountSummary = buildAccountSummary(nextState.providers, nextState.todayByProvider);
   nextState.fetchedAt = new Date().toISOString();
   nextState.streamComplete = true;
@@ -246,6 +219,7 @@ function renderDashboardState(state) {
 
   renderTotals(state.totals || {});
   renderAccountSummary(state.accountSummary, state.todayDate);
+  updateTodayLabel(state.todayDate);
   renderProviders(state);
 }
 
@@ -263,7 +237,7 @@ function formatExpirationText(expirationDate, fallbackText, todayDate) {
     return fallbackText || "N/A";
   }
 
-  const referenceDate = typeof todayDate === "string" ? todayDate : new Date().toISOString().slice(0, 10);
+  const referenceDate = typeof todayDate === "string" ? todayDate : getTodayDate();
   const expirationValue = Date.parse(`${expirationDate}T00:00:00Z`);
   const referenceValue = Date.parse(`${referenceDate}T00:00:00Z`);
 
@@ -288,30 +262,43 @@ function renderTotals(totals) {
 
 function renderAccountSummary(summary, todayDate) {
   if (!summary) {
-    kpiTokensToday.textContent = "-";
     kpiQueriesToday.textContent = "-";
     return;
   }
 
-  kpiTokensToday.textContent = formatInt(summary.tokensUsedToday);
   kpiQueriesToday.textContent = formatInt(summary.totalQueriesToday);
 
   if (todayDate) {
-    kpiTokensToday.title = `Calculated for ${todayDate}`;
     kpiQueriesToday.title = `Calculated for ${todayDate}`;
   }
 }
 
 function createProviderRefreshButton(providerName, isFinalState) {
+  const isRefreshing = refreshingProviders.has(providerName);
   const button = document.createElement("button");
   button.type = "button";
   button.className = "provider-refresh";
-  button.textContent = "🗘";
-  button.disabled = !isFinalState || refreshingProviders.has(providerName);
+  button.disabled = !isFinalState || isRefreshing;
   button.setAttribute("aria-label", `Refresh ${providerName} only`);
-  button.title = refreshingProviders.has(providerName)
+  button.setAttribute("aria-busy", String(isRefreshing));
+  button.title = isRefreshing
     ? `Refreshing ${providerName}...`
     : `Refresh ${providerName} only`;
+
+  const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  icon.setAttribute("viewBox", "0 0 24 24");
+  icon.setAttribute("aria-hidden", "true");
+  icon.setAttribute("class", "provider-refresh-icon");
+
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute(
+    "d",
+    "M12 5a7 7 0 1 0 6.52 9.54h-2.13A5 5 0 1 1 12 7c1.3 0 2.48.5 3.37 1.32L13 10.7h6V5.2l-2.21 2.21A8.96 8.96 0 0 0 12 5Z"
+  );
+  path.setAttribute("fill", "currentColor");
+
+  icon.append(path);
+  button.append(icon);
   button.addEventListener("click", () => {
     refreshProvider(providerName);
   });
@@ -473,11 +460,7 @@ async function refreshProvider(providerName) {
   renderProviders(currentDashboardState);
 
   try {
-    const params = new URLSearchParams({
-      provider: providerName,
-      start: startInput.value,
-      end: endInput.value,
-    });
+    const params = new URLSearchParams({ provider: providerName });
 
     const response = await fetch(`/api/provider?${params.toString()}`);
     const payload = await response.json();
@@ -522,7 +505,8 @@ async function refreshProvider(providerName) {
   }
 }
 
-async function fetchUsage() {
+async function fetchUsage(options = {}) {
+  const { refreshLabel = "Updated" } = options;
   clearMessages();
   setLoading(true);
   activeUsageToken += 1;
@@ -531,11 +515,6 @@ async function fetchUsage() {
   resetDashboardForLoading();
 
   try {
-    const params = new URLSearchParams({
-      start: startInput.value,
-      end: endInput.value,
-    });
-
     const payload = await new Promise((resolve, reject) => {
       const state = {
         providers: [],
@@ -544,7 +523,7 @@ async function fetchUsage() {
         expectedProviderCount: 0,
         streamComplete: false,
       };
-      const stream = new EventSource(`/api/usage/stream?${params.toString()}`);
+      const stream = new EventSource("/api/usage/stream");
       let settled = false;
 
       activeUsageStream = stream;
@@ -637,7 +616,7 @@ async function fetchUsage() {
       };
     });
 
-    showMessage("info", `Updated ${new Date(payload.fetchedAt).toLocaleString()}`);
+    showMessage("info", `${refreshLabel} ${new Date(payload.fetchedAt).toLocaleString()}`);
   } catch (error) {
     showMessage("error", error.message || String(error));
   } finally {
@@ -647,10 +626,9 @@ async function fetchUsage() {
   }
 }
 
-form.addEventListener("submit", (event) => {
-  event.preventDefault();
+refreshButton.addEventListener("click", () => {
   fetchUsage();
 });
 
-setDefaultRange();
+updateTodayLabel();
 fetchUsage();
