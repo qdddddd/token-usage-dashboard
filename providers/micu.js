@@ -22,6 +22,30 @@ function parseConsoleBalance(text) {
   return match ? parseFloat(match[1]) : null;
 }
 
+function extractUserField(selfPayload, field) {
+  const directValue = selfPayload?.data?.[field];
+  if (directValue !== undefined) {
+    return directValue;
+  }
+
+  return selfPayload?.data?.user?.[field];
+}
+
+function deriveBalanceRemainingUsd(consoleText, selfPayload, quotaPerUnit) {
+  const parsedConsoleBalance = parseConsoleBalance(consoleText);
+  if (Number.isFinite(parsedConsoleBalance)) {
+    return parsedConsoleBalance;
+  }
+
+  const rawQuota = toNumber(extractUserField(selfPayload, "quota"));
+  if (!Number.isFinite(rawQuota) || rawQuota <= 0) {
+    return null;
+  }
+
+  const divisor = Number.isFinite(quotaPerUnit) && quotaPerUnit > 0 ? quotaPerUnit : MICU_QUOTA_TO_USD;
+  return rawQuota / divisor;
+}
+
 function parseOtherPayload(other) {
   if (!other || typeof other !== "string") {
     return {};
@@ -83,6 +107,7 @@ async function scrapeMicuData(start, end, env, runtime) {
     const consoleState = await page.evaluate(() => ({
       text: document.body.innerText,
       url: document.URL,
+      quotaPerUnit: Number.parseFloat(localStorage.getItem("quota_per_unit") || "0"),
     }));
 
     if (isLoginScreen(consoleState.text, consoleState.url)) {
@@ -90,8 +115,6 @@ async function scrapeMicuData(start, end, env, runtime) {
         "Not logged in to Micu. Open Edge, sign in at https://www.openclaudecode.cn, then refresh again."
       );
     }
-
-    const balanceRemainingUsd = parseConsoleBalance(consoleState.text);
 
     const selfResponsePromise = page.waitForResponse(
       (response) => response.url().includes("/api/user/self") && response.status() === 200,
@@ -117,7 +140,8 @@ async function scrapeMicuData(start, end, env, runtime) {
 
     const selfResponse = await selfResponsePromise;
     const selfPayload = await selfResponse.json();
-    const userId = selfPayload?.data?.id || selfResponse.request().headers()["new-api-user"];
+    const balanceRemainingUsd = deriveBalanceRemainingUsd(consoleState.text, selfPayload, consoleState.quotaPerUnit);
+    const userId = extractUserField(selfPayload, "id") || selfResponse.request().headers()["new-api-user"];
 
     if (!userId) {
       throw new Error("Unable to identify the Micu account from the console session");
