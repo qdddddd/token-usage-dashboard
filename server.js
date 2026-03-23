@@ -11,6 +11,7 @@ const anthropicProvider = require("./providers/anthropic");
 const customProvider = require("./providers/custom");
 const rightCodeProvider = require("./providers/rightcode");
 const micuProvider = require("./providers/micu");
+const timiCcProvider = require("./providers/timicc");
 const { createPackyProvider } = require("./providers/packy");
 
 const PROVIDERS = {
@@ -33,6 +34,10 @@ const PROVIDERS = {
   micu: {
     ...micuProvider,
     dashboardUrl: "https://www.openclaudecode.cn/console",
+  },
+  timicc: {
+    ...timiCcProvider,
+    dashboardUrl: "https://timicc.com/dashboard",
   },
   packy: {
     ...createPackyProvider("PACKY", "packy"),

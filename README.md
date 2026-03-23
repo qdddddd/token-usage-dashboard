@@ -13,6 +13,7 @@ What it shows:
 
 - `right-code`
 - `micu`
+- `timicc`
 - `packy`
 
 ## Requirements
@@ -34,7 +35,7 @@ cp .env.example .env
 ```bash
 PORT=8088
 EDGE_PROFILE_PATH=/home/username/.config/microsoft-edge-dashboard
-PROVIDERS=right-code,micu,packy
+PROVIDERS=right-code,micu,timicc,packy
 ```
 
 3. Install dependencies:
@@ -59,6 +60,7 @@ Log in to any providers you want to use:
 - `https://www.right.codes`
 - `https://www.packyapi.com`
 - `https://www.openclaudecode.cn`
+- `https://timicc.com`
 
 6. Start the dashboard:
 
@@ -89,6 +91,7 @@ Optional provider display names:
 
 - `RIGHT_CODE_PROVIDER_ID`
 - `MICU_PROVIDER_ID`
+- `TIMICC_PROVIDER_ID`
 - `PACKY_PROVIDER_ID`
 
 ## Notes

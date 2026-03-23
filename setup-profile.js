@@ -24,6 +24,7 @@ async function setupProfile() {
   console.log("   - https://www.right.codes");
   console.log("   - https://www.packyapi.com");
   console.log("   - https://www.openclaudecode.cn");
+  console.log("   - https://timicc.com");
   console.log("\n⏳ Press Ctrl+C when done to close this window.\n");
 
   const browser = await chromium.launchPersistentContext(profilePath, {
@@ -48,6 +49,7 @@ async function setupProfile() {
           <li><a href="https://www.right.codes" target="_blank">Right Code</a></li>
           <li><a href="https://www.packyapi.com" target="_blank">Packy API</a></li>
           <li><a href="https://www.openclaudecode.cn" target="_blank">Micu (米醋API)</a></li>
+          <li><a href="https://timicc.com" target="_blank">TiMi CC</a></li>
         </ul>
         <p style="color: #999; margin-top: 30px; font-size: 14px;">
           After logging in, you can close this window or press Ctrl+C in the terminal.
